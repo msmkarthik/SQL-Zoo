@@ -1,0 +1,36 @@
+6.
+SELECT SUM(nights*amount)
+FROM booking INNER JOIN guest ON guest_id = guest.id
+             INNER JOIN rate ON 
+             (room_type_requested=room_type AND occupants=occupancy)
+WHERE first_name='Ruth' AND last_name='Cadbury'
+
+
+7.
+SELECT extra_id,description,extra.amount
+FROM booking INNER JOIN rate ON 
+             (room_type_requested=room_type AND occupants=occupancy) 
+             INNER JOIN extra ON
+             (booking.booking_id=extra.booking_id)
+WHERE booking.booking_id=5346
+
+-- I think this is the right one. The website threw error, since extras were empty
+
+8.
+SELECT last_name,first_name, address, SUM(nights)
+FROM 
+    (SELECT last_name,first_name,address,
+            COALESCE(nights,NULL,0) as nights
+    FROM booking
+    RIGHT JOIN guest ON guest.id = booking.guest_id
+    WHERE address LIKE "%Edinburgh%") as a
+GROUP BY last_name,first_name,address
+
+9.
+SELECT booking_date, COUNT(*) as arrivals
+FROM booking
+WHERE booking_date BETWEEN '2016-11-25' AND '2016-12-01'
+GROUP BY booking_date
+
+10.
+

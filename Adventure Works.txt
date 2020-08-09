@@ -1,0 +1,121 @@
+1.
+SELECT FirstName, EmailAddress
+FROM Customer
+WHERE CompanyName = 'Bike World'
+
+2.
+SELECT DISTINCT(CompanyName)
+FROM Customer A INNER JOIN CustomerAddress B ON A.CustomerID = B.CustomerID
+                INNER JOIN  Address C ON B.AddressID = C.AddressID
+WHERE City = 'Dallas'
+
+3.
+SELECT SUM(A.OrderQty) AS Total
+FROM SalesOrderDetail A JOIN Product B ON A.ProductID = B.ProductID
+WHERE B.ListPrice > 1000
+
+4.
+SELECT CompanyName
+FROM (SELECT CompanyName, SUM(SubTotal+TaxAmt+Freight) as Total
+      FROM SalesOrderHeader A 
+           INNER JOIN Customer B ON A.CustomerID=A.CustomerID
+      GROUP BY CompanyName
+      ) as mod_table
+WHERE Total>100000
+
+
+5.
+SELECT SUM(B.OrderQty)
+FROM Product A INNER JOIN SalesOrderDetail B ON A.ProductId=B.ProductID
+               INNER JOIN SalesOrderHeader C ON  
+                                     B.SalesOrderID=C.SalesOrderID 
+               INNER JOIN Customer D ON C.CustomerID=D.CustomerID 
+WHERE A.Name='Racing Socks, L' AND D.CompanyName='Riding Cycles'
+
+6.
+SELECT SalesOrderID, UPrice
+FROM (SELECT SalesOrderID, SUM(UnitPrice) as Uprice, COUNT(OrderQty) AS tot
+      FROM SalesOrderDetail
+      GROUP BY SalesOrderID) AS mod_table
+WHERE tot=1
+
+7.
+SELECT A.name,E.CompanyName 
+FROM Product A  INNER JOIN ProductModel B ON A.ProductModelID=B.ProductModelID
+                INNER JOIN SalesOrderDetail C ON A.ProductID=C.ProductID
+                INNER JOIN SaleSOrderHeader D ON C.SalesOrderID=D.SalesOrderID
+                INNER JOIN Customer E ON D.CustomerID=E.CustomerID
+WHERE B.name='Racing Socks'
+
+8.
+SELECT A.Description 
+FROM ProductDescription A INNER JOIN ProductModelProductDescription B
+ON A.ProductDescriptionID=B.ProductDescriptionID
+                          INNER JOIN ProductModel C ON B.ProductModelID=C.ProductModelID
+                          INNER JOIN Product D ON C.ProductModelID=D.ProductModelID
+WHERE B.Culture='fr' AND D.ProductID=736
+
+9.
+SELECT A.Subtotal, B.CompanyName,SUM(COALESCE(D.weight*C.OrderQty,0)) AS weight
+FROM SalesOrderHeader A INNER JOIN Customer B ON A.CustomerID=B.CustomerID
+                        INNER JOIN SalesOrderDetail C ON A.SalesOrderID=C.SalesOrderID
+                        INNER JOIN Product D ON C.ProductID=D.ProductID
+GROUP BY A.SalesOrderID, A.SubTotal, B.CompanyName
+ORDER BY SubTotal DESC
+
+10.
+SELECT SUM(C.OrderQty)
+FROM ProductCategory A INNER JOIN Product B ON A.ProductCategoryID=B.ProductCategoryID
+                       INNER JOIN SalesOrderDetail C ON B.ProductId=C.ProductId
+                       INNER JOIN SalesOrderHeader D ON C.SalesOrderId=D.SalesOrderID
+                       INNER JOIN Address E ON D.ShipToAddressID=E.AddressID
+WHERE A.Name='Cranksets' AND E.City='London'
+
+11.
+
+
+12.
+SELECT A.SalesOrderID,A.SubTotal,SUM(B.OrderQty*B.UnitPrice),SUM(B.OrderQty*C.ListPrice)
+FROM SalesOrderHeader A INNER JOIN SalesOrderDetail B ON A.SalesOrderID=B.SalesOrderID
+                        INNER JOIN Product C ON B.ProductID=C.ProductID
+GROUP BY A.SalesOrderID, A.SubTotal 
+
+
+13.
+SELECT TOP 1* 
+FROM
+(SELECT A.Name, SUM(B.OrderQty*B.UnitPrice) AS tot 
+FROM Product A INNER JOIN SalesOrderDetail B ON A.ProductId=B.ProductID
+GROUP BY A.Name) AS mod_table
+ORDER BY tot DESC
+
+14.
+SELECT range, COUNT(*) AS NumOrders, SUM(price) AS TotalValue
+FROM
+(SELECT 
+CASE WHEN price<=99 THEN '0-99'
+     WHEN price>99 AND price<=999 THEN '100-999'
+     WHEN price>999 AND price<=9999 THEN '1000-9999'
+     ELSE '10000-'
+     END AS range,
+price
+FROM
+(SELECT SalesOrderId, SUM(OrderQty*UnitPrice) AS price
+ FROM SalesOrderDetail 
+ GROUP BY SalesOrderId) as mod_1) AS mod_2
+GROUP BY range
+
+15.
+SELECT A.City, E.Name, SUM(C.OrderQty*C.UnitPrice)
+FROM Address A INNER JOIN SalesOrderHeader B ON A.AddressId=B.BilltoAddressID
+               INNER JOIN SalesOrderDetail C ON B.SalesOrderId=C.SalesOrderID
+               INNER JOIN Product D ON C.ProductID=D.ProductID
+               INNER JOIN ProductCategory E ON D.ProductCategoryID=E.ProductCategoryID
+WHERE A.City in
+(SELECT TOP 3 A.City
+FROM Address A INNER JOIN SalesOrderHeader B ON A.AddressId=B.BilltoAddressID
+               INNER JOIN SalesOrderDetail C ON B.SalesOrderId=C.SalesOrderID
+GROUP BY A.City
+ORDER BY SUM(C.OrderQty*C.UnitPrice) DESC)
+GROUP BY A.City,E.Name
+     
